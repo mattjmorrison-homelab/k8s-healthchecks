@@ -1,0 +1,8 @@
+image:
+  repository: healthchecks/healthchecks
+  digest: sha256:5eb96eb72dc63ac24743f1c0fc4469931155329e05c9781a0809320de0ae479c # v5.0.3
+
+bootstrap:
+  image:
+    repository: alpine
+    digest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc # 3.20

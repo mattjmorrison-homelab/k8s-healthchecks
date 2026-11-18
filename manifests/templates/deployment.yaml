@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthchecks
+  namespace: healthchecks
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: healthchecks
+  template:
+    metadata:
+      labels:
+        app: healthchecks
+    spec:
+      serviceAccountName: healthchecks
+      containers:
+        - name: healthchecks
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ALLOWED_HOSTS
+              value: healthchecks.morrisons.site
+            - name: SITE_ROOT
+              value: https://healthchecks.morrisons.site
+            - name: REGISTRATION_OPEN
+              value: "False"
+            # Default DB path (BASE_DIR/hc.sqlite) lives inside the
+            # container's own ephemeral filesystem, not under /data --
+            # repoint it onto the mounted PVC so the DB survives restarts.
+            - name: DB_NAME
+              value: /data/hc.sqlite
+            # Traefik terminates TLS and forwards plain HTTP; without this,
+            # Django can't tell the request was secure and login fails with
+            # "CSRF verification failed" (documented in the project's own
+            # docker/README.md).
+            - name: SECURE_PROXY_SSL_HEADER
+              value: "X-Forwarded-Proto,https"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: SECRET_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: healthchecks

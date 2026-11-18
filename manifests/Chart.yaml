@@ -1,0 +1,5 @@
+apiVersion: v2
+name: homelab-healthchecks
+description: Self-hosted Healthchecks.io cron/heartbeat monitoring
+version: 0.1.0
+appVersion: "v5.0.3"
