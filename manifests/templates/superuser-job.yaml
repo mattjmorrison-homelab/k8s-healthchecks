@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: healthchecks-create-superuser
+  namespace: healthchecks
+  annotations:
+    # PostSync, not PreSync: this job needs the app's own image to run
+    # `manage.py`, the PVC (holding the sqlite DB that `manage.py migrate`
+    # writes to), and the healthchecks Secret populated by the
+    # ExternalSecret -- none of which exist yet during PreSync, since PVC
+    # and ExternalSecret are plain Sync-phase resources. PostSync runs
+    # only once the Deployment is Healthy, i.e. after its own run.sh has
+    # already applied migrations, so this job's own `migrate` call is a
+    # no-op safety net, not the real first application of migrations.
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: healthchecks
+      restartPolicy: Never
+      containers:
+        - name: create-superuser
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          command: ["/bin/sh", "/scripts/create-superuser.sh"]
+          env:
+            - name: DB_NAME
+              value: /data/hc.sqlite
+            - name: SUPERUSER_USERNAME
+              value: admin
+            - name: SUPERUSER_EMAIL
+              value: admin@morrisons.site
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: SECRET_KEY
+            - name: DJANGO_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: SUPERUSER_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: healthchecks
+        - name: script
+          configMap:
+            name: healthchecks-create-superuser-script
+            defaultMode: 0555
