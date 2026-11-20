@@ -37,7 +37,7 @@ spec:
                 secretKeyRef:
                   name: healthchecks
                   key: SECRET_KEY
-            - name: SUPERUSER_PASSWORD
+            - name: DJANGO_SUPERUSER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthchecks

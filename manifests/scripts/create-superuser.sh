@@ -3,14 +3,16 @@ set -eu
 
 ./manage.py migrate --noinput
 
-./manage.py shell -c "
-from django.contrib.auth.models import User
-import os
-
-username = os.environ['SUPERUSER_USERNAME']
-if User.objects.filter(username=username).exists():
-    print(f'Superuser {username} already exists, skipping.')
-else:
-    User.objects.create_superuser(username, os.environ['SUPERUSER_EMAIL'], os.environ['SUPERUSER_PASSWORD'])
-    print(f'Created superuser {username}.')
-"
+if output=$(./manage.py createsuperuser --noinput --username "$SUPERUSER_USERNAME" --email "$SUPERUSER_EMAIL" 2>&1); then
+    echo "$output"
+else
+    case "$output" in
+        *"already taken"*)
+            echo "$output"
+            ;;
+        *)
+            echo "$output" >&2
+            exit 1
+            ;;
+    esac
+fi
