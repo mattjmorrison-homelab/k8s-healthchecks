@@ -28,8 +28,6 @@ spec:
           env:
             - name: DB_NAME
               value: /data/hc.sqlite
-            - name: SUPERUSER_USERNAME
-              value: admin
             - name: SUPERUSER_EMAIL
               value: admin@morrisons.site
             - name: SECRET_KEY
@@ -37,7 +35,7 @@ spec:
                 secretKeyRef:
                   name: healthchecks
                   key: SECRET_KEY
-            - name: DJANGO_SUPERUSER_PASSWORD
+            - name: SUPERUSER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: healthchecks
