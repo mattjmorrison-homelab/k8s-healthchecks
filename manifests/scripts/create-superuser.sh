@@ -3,7 +3,7 @@ set -eu
 
 ./manage.py migrate --noinput
 
-if output=$(./manage.py createsuperuser --noinput --username "$SUPERUSER_USERNAME" --email "$SUPERUSER_EMAIL" 2>&1); then
+if output=$(./manage.py createsuperuser --email "$SUPERUSER_EMAIL" --password "$SUPERUSER_PASSWORD" 2>&1); then
     echo "$output"
 else
     case "$output" in
