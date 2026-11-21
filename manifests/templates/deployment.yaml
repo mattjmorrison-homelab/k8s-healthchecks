@@ -28,6 +28,8 @@ spec:
               value: https://healthchecks.morrisons.site
             - name: REGISTRATION_OPEN
               value: "False"
+            - name: DEBUG
+              value: "False"
             # Default DB path (BASE_DIR/hc.sqlite) lives inside the
             # container's own ephemeral filesystem, not under /data --
             # repoint it onto the mounted PVC so the DB survives restarts.
