@@ -41,3 +41,11 @@ setup() {
   ' -)
   [ "$value" = "X-Forwarded-Proto,https" ]
 }
+
+@test "healthchecks Deployment disables Django's DEBUG setting" {
+  value=$(echo "$RENDERED" | yq eval-all '
+    select(.kind == "Deployment" and .metadata.name == "healthchecks") |
+    (.spec.template.spec.containers[] | select(.name == "healthchecks") | .env[] | select(.name == "DEBUG") | .value)
+  ' -)
+  [ "$value" = "False" ]
+}
